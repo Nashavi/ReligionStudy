@@ -30,7 +30,7 @@ require(wordcloud)
 require(RColorBrewer)
 require(RTextTools)
 require(SnowballC)
-require(gridExtra)
+require(igraph)
 
 tao.corpus <- Corpus(URISource("/Users/Avi/Documents/UCD/BA Prac/ReligionStudy/tao.txt"))
 bible.corpus <- Corpus(URISource("/Users/Avi/Documents/UCD/BA Prac/ReligionStudy/bible.txt"))
@@ -57,11 +57,8 @@ bible.corpus<-cleanup(bible.corpus)
 gita.corpus<-cleanup(gita.corpus)
 quran.corpus<-cleanup(quran.corpus)
 
-pal <- brewer.pal(9,"YlGnBu")
-pal <- pal[-(1:4)]
-set.seed(123)
 wordcloud(words = tao.corpus, scale=c(4,0.8), max.words=100, random.order=FALSE, 
-          rot.per=0.1, use.r.layout=FALSE, colors=pal)
+          rot.per=0.1, use.r.layout=FALSE, colors="black")
 wordcloud(words = bible.corpus, scale=c(4,0.8), max.words=100, random.order=FALSE, 
           rot.per=0.1, use.r.layout=FALSE, colors="azure4")
 wordcloud(words = gita.corpus, scale=c(4,0.8), max.words=100, random.order=FALSE, 
@@ -77,8 +74,26 @@ colnames(tdm)<- c("Tao","Bible","Gita","Quran")
 
 comparison.cloud(tdm, random.order=FALSE, 
                  colors = c("#00B2FF", "red", "#FF0099", "#6600CC"),
-                 title.size=1.5, max.words=500)
+                 title.size=1.5, max.words=100, rot.per = 0)
 
 commonality.cloud(tdm, random.order=FALSE, 
                   colors = brewer.pal(8, "Dark2"),
-                  title.size=1.5)
+                  title.size=1.5, rot.per = 0)
+
+
+# create a term-term adjacency matrix
+
+#gitatdm<-TermDocumentMatrix(gita.corpus)
+#gitatdm<-as.matrix(gitatdm)
+
+tdm[tdm>=1]<-1
+termMatrix <- tdm %*% t(tdm)
+termMatrix<-termMatrix[1:10,1:10]
+termMatrix[termMatrix>=1]<-1
+g <- graph.adjacency(termMatrix, weighted=T, mode = "undirected")
+# remove loops
+g <- simplify(g)
+V(g)$label <- V(g)$name
+V(g)$degree <- degree(g)
+plot(g,layout =layout.fruchterman.reingold(g))
+
