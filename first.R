@@ -37,7 +37,6 @@ bible.corpus <- Corpus(URISource("/Users/Avi/Documents/UCD/BA Prac/ReligionStudy
 gita.corpus <- Corpus(URISource("/Users/Avi/Documents/UCD/BA Prac/ReligionStudy/gita.txt"))
 quran.corpus <- Corpus(URISource("/Users/Avi/Documents/UCD/BA Prac/ReligionStudy/quran.txt"))
 
-stop.words<-c("the","a","page","they","this","for","with","and")
 
 #Clean Up Corpus
 cleanup<- function(corpus){
@@ -46,9 +45,9 @@ cleanup<- function(corpus){
   tmpcorpus<-tm_map(tmpcorpus,tolower)
   tmpcorpus<-tm_map(tmpcorpus,stripWhitespace)
   tmpcorpus<-tm_map(tmpcorpus,PlainTextDocument)
-  tmpcorpus<-tm_map(tmpcorpus,removeWords,words=as.character(stop.words))
-  tmpcorpus<-tm_map(tmpcorpus,removeWords,stopwords("english"))
-  tmpcorpus<-tm_map(tmpcorpus,stemDocument)
+  #tmpcorpus<-tm_map(tmpcorpus,removeWords,words=as.character(stop.words))
+  #tmpcorpus<-tm_map(tmpcorpus,removeWords,stopwords("english"))
+  #tmpcorpus<-tm_map(tmpcorpus,stemDocument)
   return(tmpcorpus)
 }
 
@@ -60,7 +59,7 @@ quran.corpus<-cleanup(quran.corpus)
 wordcloud(words = tao.corpus, scale=c(4,0.8), max.words=100, random.order=FALSE, 
           rot.per=0.1, use.r.layout=FALSE, colors="black")
 wordcloud(words = bible.corpus, scale=c(4,0.8), max.words=100, random.order=FALSE, 
-          rot.per=0.1, use.r.layout=FALSE, colors="azure4")
+          rot.per=0.1, use.r.layout=FALSE, colors="chocolate4")
 wordcloud(words = gita.corpus, scale=c(4,0.8), max.words=100, random.order=FALSE, 
               rot.per=0.1, use.r.layout=FALSE, colors="chocolate1")
 wordcloud(words = quran.corpus, scale=c(4,0.8), max.words=100, random.order=FALSE, 
@@ -71,14 +70,13 @@ tdm<-TermDocumentMatrix(tmpText)
 tdm<-as.matrix(tdm)
 colnames(tdm)<- c("Tao","Bible","Gita","Quran")
 
-
 comparison.cloud(tdm, random.order=FALSE, 
-                 colors = c("#00B2FF", "red", "#FF0099", "#6600CC"),
-                 title.size=1.5, max.words=100, rot.per = 0)
+                 colors = c("black", "chocolate4", "chocolate1", "darkgreen"),
+                 title.size=1.5, max.words=150, rot.per = 0)
 
 commonality.cloud(tdm, random.order=FALSE, 
-                  colors = brewer.pal(8, "Dark2"),
-                  title.size=1.5, rot.per = 0)
+                  colors = c("black", "chocolate4", "chocolate1", "darkgreen"),
+                  max.words=150, rot.per = 0)
 
 
 # create a term-term adjacency matrix
