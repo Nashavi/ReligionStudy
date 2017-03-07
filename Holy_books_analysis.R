@@ -251,75 +251,146 @@ ggplot(plotthis, aes(order, n, fill = sentiment)) +
         strip.background = element_blank())
 
 # Common Sentiments -------------------------------------------------------------
-
+require(ggradar)
 require(gridExtra)
 
-p<-doc_words %>%
-  #inner_join(get_sentiments("bing")) %>%
-  #count(doc,word, sentiment, sort = TRUE) %>%
-  acast(word ~ doc, value.var = "count",sum) %>%
-  data.frame()
-
-#p$total<-rowSums(p)
-p$word<-row.names(p)
-
-
-p$The.Bhagavad.Gita<- ifelse(p$The.Bhagavad.Gita!=0,p$The.Bhagavad.Gita/sum(p$The.Bhagavad.Gita),0)
-p$The.King.James.Bible<-ifelse(p$The.King.James.Bible!=0,p$The.King.James.Bible/sum(p$The.King.James.Bible),0)
-p$The.Quran<-ifelse(p$The.Quran!=0,p$The.Quran/sum(p$The.Quran),0)
-p$The.Tao.Te.Ching<-ifelse(p$The.Tao.Te.Ching!=0,p$The.Tao.Te.Ching/sum(p$The.Tao.Te.Ching),0)
-#p$totalratio<-p$total/sum(p$total)
-
-#p$sumratio<-p$The.Bhagavad.Gita+p$The.King.James.Bible+p$The.Quran+p$The.Tao.Te.Ching
-
-p<-melt(p)
-
-p<-p %>%
-  inner_join(get_sentiments("bing"))
-
-x<-p %>%
+commonnegwords<-doc_words %>%
+  group_by(doc) %>%
+  mutate(countpercent=count/sum(count)) %>%
+  ungroup() %>%
+  group_by(word) %>%
+  mutate(wordimp= sum(countpercent)) %>%
   filter(sentiment=="negative") %>%
-  group_by(word) %>%
-  mutate(l=sum(value)) %>%
-  ungroup() %>%
-  top_n(n=50) %>%
-  mutate(word = reorder(word, l)) %>%
-  ggplot(aes(word,value,fill=variable)) +
-  geom_bar(stat="identity",position = position_dodge(width=0.8),show.legend = F) +
-  coord_flip()+
-  scale_fill_manual("",values = c("#ffbf00","darkkhaki","#009000","cadetblue3"),labels = c("The Bhagavad GIta","The King James Bible","The Quran","The Tao Te Ching"))+
-  labs(x="Word",y="Weight", title = "Common Negative sentiments")+
-  theme(plot.title=element_text(hjust=0.5,face = "bold"),
-        panel.border = element_blank(),
-        panel.background = element_blank(),
-        panel.grid.major = element_line(colour = "#f9f9f9"),
-        panel.grid.minor = element_blank(),
-        strip.text.x = element_text(size=11,hjust=0.05,face="bold"),
-        strip.background = element_blank(),
-        axis.title = element_text(face = "bold"))
+  group_by(doc) %>%
+  top_n(n=10,wt=wordimp) %>%
+  arrange(doc,wordimp) %>%
+  select(doc,word,countpercent) %>%
+  dcast(doc~word)
 
-y<-p %>%
+commonnegwords[is.na(commonnegwords)]<-0
+x<-ggradar(commonnegwords, grid.min = 0,
+           grid.mid = 0.015,
+           grid.max = 0.03,
+           axis.label.offset = 1.1,
+           axis.label.size = 4,
+           grid.label.size = 0,
+           group.line.width = 0.8,
+           group.point.size = 1.5,
+           background.circle.colour = "#ffffff",
+           legend.text.size = 9,
+           plot.legend = FALSE,
+           plot.title = "Common negative sentiments")+
+  theme(legend.position = "bottom",
+        plot.title=element_text(hjust=0.5,face = "bold"))+
+  scale_colour_manual(values = rep(c("#ffbf00","darkkhaki","#009000","cadetblue3"), 100))
+
+commonposwords<-doc_words %>%
+  group_by(doc) %>%
+  mutate(countpercent=count/sum(count)) %>%
+  ungroup() %>%
+  group_by(word) %>%
+  mutate(wordimp= sum(countpercent)) %>%
   filter(sentiment=="positive") %>%
-  group_by(word) %>%
-  mutate(l=sum(value)) %>%
-  ungroup() %>%
-  top_n(n=50) %>%
-  mutate(word = reorder(word, l)) %>%
-  ggplot(aes(word,value,fill=variable)) +
-  geom_bar(stat="identity",position = position_dodge(width=0.8)) +
-  coord_flip()+
-  scale_fill_manual("",values = c("#ffbf00","darkkhaki","#009000","cadetblue3"),labels = c("The Bhagavad GIta","The King James Bible","The Quran","The Tao Te Ching"))+
-  labs(x="",y="Weight", title = "Common Positive sentiments")+
-  theme(plot.title=element_text(hjust=0.5,face = "bold"),
-        panel.border = element_blank(),
-        panel.background = element_blank(),
-        panel.grid.major = element_line(colour = "#f9f9f9"),
-        panel.grid.minor = element_blank(),
-        strip.text.x = element_text(size=11,hjust=0.05,face="bold"),
-        strip.background = element_blank(),
-        axis.title = element_text(face = "bold"))
+  group_by(doc) %>%
+  top_n(n=10,wt=wordimp) %>%
+  arrange(doc,wordimp) %>%
+  select(doc,word,countpercent) %>%
+  dcast(doc~word)
 
-grid.arrange(x,y, widths=3:4)
+commonposwords[is.na(commonposwords)]<-0
+y<-ggradar(commonposwords, grid.min = 0,
+           grid.mid = 0.025,
+           grid.max = 0.05,
+           axis.label.offset = 1.1,
+           axis.label.size = 4,
+           grid.label.size = 0,
+           group.line.width = 0.8,
+           group.point.size = 1.5,
+           background.circle.colour = "#ffffff",
+           legend.text.size = 9,
+           plot.legend = FALSE,
+           plot.title = "Common positive sentiments")+
+  theme(legend.position = "none",
+        plot.title=element_text(hjust=0.5,face = "bold"),
+        axis.title = element_text(face = "bold"))+
+  scale_colour_manual(values = rep(c("#ffbf00","darkkhaki","#009000","cadetblue3"), 100))
+
+tmp <- arrangeGrob(x + theme(legend.position = "none"), y + theme(legend.position = "none"), layout_matrix = matrix(c(1, 2), nrow = 1))
+
+g <- ggplotGrob(x + theme(legend.position="right"))$grobs
+legend <- g[[which(sapply(g, function(x) x$name) == "guide-box")]]
+
+grid.arrange(tmp, legend,ncol=2, widths=c(9,1.5))
+
+# Deleted:-
+# require(gridExtra)
+# 
+# p<-doc_words %>%
+#   #inner_join(get_sentiments("bing")) %>%
+#   #count(doc,word, sentiment, sort = TRUE) %>%
+#   acast(word ~ doc, value.var = "count",sum) %>%
+#   data.frame()
+# 
+# #p$total<-rowSums(p)
+# p$word<-row.names(p)
+# 
+# 
+# p$The.Bhagavad.Gita<- ifelse(p$The.Bhagavad.Gita!=0,p$The.Bhagavad.Gita/sum(p$The.Bhagavad.Gita),0)
+# p$The.King.James.Bible<-ifelse(p$The.King.James.Bible!=0,p$The.King.James.Bible/sum(p$The.King.James.Bible),0)
+# p$The.Quran<-ifelse(p$The.Quran!=0,p$The.Quran/sum(p$The.Quran),0)
+# p$The.Tao.Te.Ching<-ifelse(p$The.Tao.Te.Ching!=0,p$The.Tao.Te.Ching/sum(p$The.Tao.Te.Ching),0)
+# #p$totalratio<-p$total/sum(p$total)
+# 
+# #p$sumratio<-p$The.Bhagavad.Gita+p$The.King.James.Bible+p$The.Quran+p$The.Tao.Te.Ching
+# 
+# p<-melt(p)
+# 
+# p<-p %>%
+#   inner_join(get_sentiments("bing"))
+# 
+# x<-p %>%
+#   filter(sentiment=="negative") %>%
+#   group_by(word) %>%
+#   mutate(l=sum(value)) %>%
+#   ungroup() %>%
+#   top_n(n=50) %>%
+#   mutate(word = reorder(word, l)) %>%
+#   ggplot(aes(word,value,fill=variable)) +
+#   geom_bar(stat="identity",position = position_dodge(width=0.8),show.legend = F) +
+#   coord_flip()+
+#   scale_fill_manual("",values = c("#ffbf00","darkkhaki","#009000","cadetblue3"),labels = c("The Bhagavad GIta","The King James Bible","The Quran","The Tao Te Ching"))+
+#   labs(x="Word",y="Weight", title = "Common Negative sentiments")+
+#   theme(plot.title=element_text(hjust=0.5,face = "bold"),
+#         panel.border = element_blank(),
+#         panel.background = element_blank(),
+#         panel.grid.major = element_line(colour = "#f9f9f9"),
+#         panel.grid.minor = element_blank(),
+#         strip.text.x = element_text(size=11,hjust=0.05,face="bold"),
+#         strip.background = element_blank(),
+#         axis.title = element_text(face = "bold"))
+# 
+# y<-p %>%
+#   filter(sentiment=="positive") %>%
+#   group_by(word) %>%
+#   mutate(l=sum(value)) %>%
+#   ungroup() %>%
+#   top_n(n=50) %>%
+#   mutate(word = reorder(word, l)) %>%
+#   ggplot(aes(word,value,fill=variable)) +
+#   geom_bar(stat="identity",position = position_dodge(width=0.8)) +
+#   coord_flip()+
+#   scale_fill_manual("",values = c("#ffbf00","darkkhaki","#009000","cadetblue3"),labels = c("The Bhagavad GIta","The King James Bible","The Quran","The Tao Te Ching"))+
+#   labs(x="",y="Weight", title = "Common Positive sentiments")+
+#   theme(plot.title=element_text(hjust=0.5,face = "bold"),
+#         panel.border = element_blank(),
+#         panel.background = element_blank(),
+#         panel.grid.major = element_line(colour = "#f9f9f9"),
+#         panel.grid.minor = element_blank(),
+#         strip.text.x = element_text(size=11,hjust=0.05,face="bold"),
+#         strip.background = element_blank(),
+#         axis.title = element_text(face = "bold"))
+# 
+# grid.arrange(x,y, widths=3:4)
 
 # Top 20 Unqiue Words - TF-IDF --------------------------------------------
 
