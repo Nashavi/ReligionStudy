@@ -238,7 +238,7 @@ ggplot(plotthis, aes(order, n, fill = sentiment)) +
     expand = c(0,0)) +
   labs(y="Contribution to sentiment",x=NULL,title = "Top 20 sentiments in each text") +
   coord_flip() +
-  facet_wrap(~doc,scales = "free")+
+  facet_wrap(~doc,scales = "free",ncol=1)+
   scale_fill_manual("",values = c("brown","#ddaa00"),labels= c("Negative\nSentiments","Positive\nSentiments"))+
   theme_bw() +
   theme(legend.position="none",
@@ -310,18 +310,19 @@ y<-ggradar(commonposwords, grid.min = 0,
            legend.text.size = 9,
            plot.legend = FALSE,
            plot.title = "Common positive sentiments")+
-  theme(legend.position = "none",
+  theme(legend.position = "bottom",
         plot.title=element_text(hjust=0.5,face = "bold"),
         axis.title = element_text(face = "bold"))+
   scale_colour_manual(values = rep(c("#ffbf00","darkkhaki","#009000","cadetblue3"), 100))
 
-tmp <- arrangeGrob(x + theme(legend.position = "none"), y + theme(legend.position = "none"), layout_matrix = matrix(c(1, 2), nrow = 1))
+tmp <- arrangeGrob(x + theme(legend.position = "none"), y + theme(legend.position = "none"), layout_matrix = matrix(c(1, 2), nrow = 2))
 
-g <- ggplotGrob(x + theme(legend.position="right"))$grobs
+g <- ggplotGrob(y + theme(legend.position="right"))$grobs
 legend <- g[[which(sapply(g, function(x) x$name) == "guide-box")]]
 
-grid.arrange(tmp, legend,ncol=2, widths=c(9,1.5))
+grid.arrange(tmp, legend,ncol=2, widths=c(9,6))
 
+grid.arrange(x,y,nrow=2)
 # Deleted:-
 # require(gridExtra)
 # 
@@ -508,5 +509,5 @@ g3<-printgraph(bigram_counts_gr,"The Quran",colorname="#009000")
 g4<-printgraph(bigram_counts_gr,"The Tao Te Ching",colorname="cadetblue3")
 
 
-grid.arrange(g1,g2,g3,g4)
+grid.arrange(g1,g2,g3,g4,ncol=1)
 
